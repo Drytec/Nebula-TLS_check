@@ -5,99 +5,199 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
-type SSLResponse struct {
-	Status        string           `json:"status"`
-	StatusMessage string           `json:"statusMessage"`
-	Host          string           `json:"host"`
-	Endpoints     EndpointResponse `json:"endpoints"`
-}
-
-type EndpointResponse []struct {
-	Grade string `json:"grade"`
-	//IpAddress            string          `json:"ipAddress"`
-	//StatusDetailsMessage string          `json:"statusDetailsMessage"`
-	Details EndpointDetails `json:"details"`
-}
-
-type EndpointDetails struct {
-	Protocols Protocols `json:"protocols"`
-	VulnBeast string    `json:"vulnBeats"`
-}
-type Protocols []struct {
-	Name             string `json:"name"`
-	Version          string `json:"version"`
-	V2SuitesDisabled string `json:"v2SuitesDisabled"`
-	Q                string `json:"q"`
-}
-
-func VerifyInsecureProtocolsVersion(protocolVersion string) bool {
-	insecureProtocols := [2]string{"1.0", "1.1"}
-	for _, val := range insecureProtocols {
-		if protocolVersion == val {
-			return true
-		}
-	}
-	return false
-}
-func VerifyInsecureProtocolsSSl(protocolsName string) bool {
-	insecureProtocols := [1]string{"SSL"}
-	for _, value := range insecureProtocols {
-		if protocolsName == value {
+func VerifyInsecureProtocols(protocolVersion string, protocolsName string) bool {
+	insecureProtocols := []string{"1.0", "1.1","SSL","SSLv2","SSLv2"}
+	for _, val := range insecureProtocols  {
+		if protocolVersion == val || protocolsName == val {
 			return true
 		}
 	}
 	return false
 }
 
-func CountInsecuritiesEndpoint(endpoints EndpointResponse) int {
-	counterTotal := 0
+func RegisterVulns(details  EndpointDetails,vulsList *[]string){
+	checks := map[string]bool{
+		"FREAK": details.Freak,
+		"BEAST": details.VulnBeast,
+		"POODLE": details.Poodle,
+		"HEARTBLEED": details.Heartbleed,
+		"LOGJAM": details.Logjam,
+	}
+
+	for name, detected := range checks {
+		if len(*vulsList)<1{
+			if detected  {
+				*vulsList = append(*vulsList, name)
+			}
+		}
+		for _,exist:= range *vulsList{
+			if detected && exist!=name {
+				*vulsList = append(*vulsList, name)
+			}
+		}
+	}
+}
+
+
+func TimeCheckerStatusProgress(response *SSLResponse,statusCode int){
+	stopper:=true
+	for stopper {
+		if statusCode == 429 || statusCode == 529{
+			fmt.Println("HOLA")
+		}
+		if response.Status!="READY" && response.Status!="ERROR"{
+			checkState := VerifyDomain(response.Host,false)
+			fmt.Println("EJECUTANDO")
+			*response=checkState
+			time.Sleep(15 * time.Second)
+			continue
+		}
+		stopper=false
+	}
+}
+
+func CountGrades(endpoints EndpointResponse) map[string]int {
+	grades := make(map[string]int)
+	grades["A+"] = 0
+	grades["A"]  = 0
+	grades["B"]  = 0
+	grades["C"]  = 0
+	grades["D"]  = 0
+	grades["E"]  = 0
+	grades["F"]  = 0
+	grades["T"]  = 0 
+	grades["M"]  = 0 
+
 	for _, endpoint := range endpoints {
-		counterTotal = counterTotal + CountInsecuritiesProtocol(endpoint.Details.Protocols)
-	}
-	return counterTotal
-}
-
-func CountInsecuritiesProtocol(protocolsVersion Protocols) int {
-	counterProtocol := 0
-	for _, value := range protocolsVersion {
-		if VerifyInsecureProtocolsVersion(value.Version) || VerifyInsecureProtocolsSSl(value.Name) {
-			counterProtocol++
+		switch endpoint.Grade {
+		case "A+":
+			grades["A+"]++
+		case "A", "A-":
+			grades["A"]++
+		case "B":
+			grades["B"]++
+		case "C":
+			grades["C"]++
+		case "D":
+			grades["D"]++
+		case "E":
+			grades["E"]++
+		case "F":
+			grades["F"]++
+		case "T": 
+			grades["T"]++
+		case "M":
+			grades["M"]++
+		default:
+			grades["F"]++
 		}
 	}
-	return counterProtocol
+	return grades
 }
 
-func VerifyDomain(domain string) string {
-	//https://api.ssllabs.com/api/v2/analyze?host=" + domain+"&all=on&startNew
-	resp, err := http.Get("https://api.ssllabs.com/api/v2/analyze?host=" + domain + "&all=on")
+
+func CountEndpoints(endpoints EndpointResponse)int {
+	return len(endpoints)
+}
+
+func CountInsecuritiesProtocol(protocolsVersion Protocols) bool {
+	for _, value := range protocolsVersion {
+		if VerifyInsecureProtocols(value.Version, value.Name) {
+			return true
+		}
+	}
+	return false
+}
+
+func VerifyDomain(domain string,startNew bool) SSLResponse {
+
+	var resp *http.Response
+	var err error
+
+	resp, err = http.Get("https://api.ssllabs.com/api/v2/analyze?host=" + domain + "&all=on")
+
+	if startNew{
+		resp, err = http.Get("https://api.ssllabs.com/api/v2/analyze?host=" + domain + "&all=on&startNew")
+	}
+	code :=resp.StatusCode
 	if err != nil {
 		fmt.Println("Error en la petición:", err)
-		return ""
+		return SSLResponse{}
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Error leyendo respuesta:", err)
-		return ""
+		return SSLResponse{}
 	}
 
 	var result SSLResponse
 	err = json.Unmarshal(body, &result)
 	if err != nil {
 		fmt.Println("Error parseando JSON:", err)
-		return ""
+		return SSLResponse{}
 	}
-	x := result.Endpoints
-	totalinsecure := CountInsecuritiesEndpoint(x)
-	fmt.Println("Host:", result.Host)
-	fmt.Println("Estado:", result.Status)
-	fmt.Println("Host:", result.StatusMessage)
-	fmt.Println("Endpoints", result.Endpoints)
-
-	fmt.Println("InsecureProtocols", totalinsecure)
-
-	return result.Status
+	fmt.Println(code)
+	TimeCheckerStatusProgress(&result,code)
+	return result
 }
+
+
+
+func CheckAvailability()SSLResponse{
+	var resp *http.Response
+	var err error
+
+	resp, err = http.Get("https://api.ssllabs.com/api/v2/info")
+		if err != nil {
+		fmt.Println("Error en la petición:", err)
+		return SSLResponse{}
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error leyendo respuesta:", err)
+		return SSLResponse{}
+	}
+
+	var result SSLResponse
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		fmt.Println("Error parseando JSON:", err)
+		return SSLResponse{}
+	}
+	return result
+
+}
+
+
+
+func GetInfo() (*InfoResponse, error) {
+	resp, err := http.Get("https://api.ssllabs.com/api/v2/info")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("status code %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var info InfoResponse
+	if err := json.Unmarshal(body, &info); err != nil {
+		return nil, err
+	}
+
+	return &info, nil
+}
+
