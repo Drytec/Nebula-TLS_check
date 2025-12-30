@@ -45,27 +45,14 @@ type EndpointDetails struct {
 	SupportsRc4    bool `json:"supportsRc4"`
 	Rc4Only        bool `json:"rc4Only"`
 
-	// Renegociación
+	
 	RenegSupport int `json:"renegSupport"`
 
-	// OCSP / certificados
+	
 	OcspStapling bool `json:"ocspStapling"`
 	HasSct       int  `json:"hasSct"`
 }
-/*
-type Suites struct {
-	List       []Suite `json:"list"`
-	Preference bool    `json:"preference"`
-}
 
-type Suite struct {
-	ID             int    `json:"id"`
-	Name           string `json:"name"`
-	CipherStrength int    `json:"cipherStrength"`
-	DhStrength     int    `json:"dhStrength"`
-	EcdhBits       int    `json:"ecdhBits"`
-	InsecureSuite *int   `json:"q"` 
-}*/
 
 type Protocols []struct {
 	Name             string `json:"name"`

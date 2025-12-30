@@ -42,13 +42,15 @@ func PrintResults(result SSLResponse){
 		RegisterVulns(endpoints.Details,&vulns)
 	}
 	fmt.Println("Host:", result.Host)
-	fmt.Println("Estado:", result.Status)
+	fmt.Println("State:", result.Status)
 	fmt.Println("protocol",result.Protocol)
 	if result.Status=="ERROR"{
 		fmt.Println("Error reason:", result.StatusMessage)
 	}
-	fmt.Println("Vulns",vulns)
-	fmt.Println("CountProtocols Grade:",CountGrades(result.Endpoints))
-	fmt.Println("ScoreGrades", ScoreGrade(CountGrades(result.Endpoints)))
-
+	ScoreProtocols(result.Endpoints)
+	fmt.Println("Vulns:",vulns)
+	fmt.Println("Protocols Grade:",CountGrades(result.Endpoints))
+	fmt.Println("Grades Score:", ScoreGrade(CountGrades(result.Endpoints)))
+	fmt.Println("Protocols Score:",ScoreProtocols(result.Endpoints))
+	fmt.Println("Vulns Score:",ScoreVulns(vulns))
 }

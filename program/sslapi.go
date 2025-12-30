@@ -8,11 +8,13 @@ import (
 	"time"
 )
 
-func VerifyInsecureProtocols(protocolVersion string, protocolsName string) bool {
-	insecureProtocols := []string{"1.0", "1.1","SSL","SSLv2","SSLv2"}
+func VerifyInsecureProtocols(protocols Protocols) bool {
+	insecureProtocols := []string{"1.0", "1.1","SSL","SSLv2","SSLv3"}
 	for _, val := range insecureProtocols  {
-		if protocolVersion == val || protocolsName == val {
+		for _,protocol:=range protocols{
+			if protocol.Name == val || protocol.Version == val {
 			return true
+		}
 		}
 	}
 	return false
@@ -25,6 +27,7 @@ func RegisterVulns(details  EndpointDetails,vulsList *[]string){
 		"POODLE": details.Poodle,
 		"HEARTBLEED": details.Heartbleed,
 		"LOGJAM": details.Logjam,
+		"RC4":details.Rc4Only,
 	}
 
 	for name, detected := range checks {
@@ -45,9 +48,6 @@ func RegisterVulns(details  EndpointDetails,vulsList *[]string){
 func TimeCheckerStatusProgress(response *SSLResponse,statusCode int){
 	stopper:=true
 	for stopper {
-		if statusCode == 429 || statusCode == 529{
-			fmt.Println("HOLA")
-		}
 		if response.Status!="READY" && response.Status!="ERROR"{
 			checkState := VerifyDomain(response.Host,false)
 			fmt.Println("EJECUTANDO")
@@ -61,8 +61,8 @@ func TimeCheckerStatusProgress(response *SSLResponse,statusCode int){
 
 func CountGrades(endpoints EndpointResponse) map[string]int {
 	grades := make(map[string]int)
-	grades["A+"] = 0
-	grades["A"]  = 0
+	grades["A"] = 0
+	grades["A+"]  = 0
 	grades["B"]  = 0
 	grades["C"]  = 0
 	grades["D"]  = 0
@@ -98,20 +98,6 @@ func CountGrades(endpoints EndpointResponse) map[string]int {
 	return grades
 }
 
-
-func CountEndpoints(endpoints EndpointResponse)int {
-	return len(endpoints)
-}
-
-func CountInsecuritiesProtocol(protocolsVersion Protocols) bool {
-	for _, value := range protocolsVersion {
-		if VerifyInsecureProtocols(value.Version, value.Name) {
-			return true
-		}
-	}
-	return false
-}
-
 func VerifyDomain(domain string,startNew bool) SSLResponse {
 
 	var resp *http.Response
@@ -141,40 +127,9 @@ func VerifyDomain(domain string,startNew bool) SSLResponse {
 		fmt.Println("Error parseando JSON:", err)
 		return SSLResponse{}
 	}
-	fmt.Println(code)
 	TimeCheckerStatusProgress(&result,code)
 	return result
 }
-
-
-
-func CheckAvailability()SSLResponse{
-	var resp *http.Response
-	var err error
-
-	resp, err = http.Get("https://api.ssllabs.com/api/v2/info")
-		if err != nil {
-		fmt.Println("Error en la petición:", err)
-		return SSLResponse{}
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error leyendo respuesta:", err)
-		return SSLResponse{}
-	}
-
-	var result SSLResponse
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		fmt.Println("Error parseando JSON:", err)
-		return SSLResponse{}
-	}
-	return result
-
-}
-
 
 
 func GetInfo() (*InfoResponse, error) {

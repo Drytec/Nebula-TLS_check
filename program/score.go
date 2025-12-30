@@ -1,5 +1,4 @@
 package main
-
 func ScoreGrade( grades map[string]int)int {
 	countGrades:=0
 	totalScore :=0
@@ -34,6 +33,27 @@ func ScoreGrade( grades map[string]int)int {
 	return totalScore
 }
 
-func ScoreProtocols(endpoints EndpointResponse){
+func ScoreProtocols(endpoints EndpointResponse)int{
+	totalScore:=100
+	securityFail:=totalScore/len(endpoints)
+	for _,endpoint := range endpoints{
+		condition:=VerifyInsecureProtocols(endpoint.Details.Protocols)
+			if condition{
+				totalScore=totalScore-securityFail
+			}
+	}
+	return totalScore
+}
 
+func ScoreVulns(vulnsDetected []string)int{
+	totalScore:=100
+	if len(vulnsDetected)>0{
+		totalScore=0
+	}
+	return totalScore
+}
+
+func GlobalScore(scoreVulns,scoreGrade,scoreProtocols int) int{
+	totalScore:=scoreGrade*scoreVulns*scoreProtocols
+	return totalScore
 }
