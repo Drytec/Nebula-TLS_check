@@ -45,19 +45,34 @@ func RegisterVulns(details  EndpointDetails,vulsList *[]string){
 }
 
 
-func TimeCheckerStatusProgress(response *SSLResponse){
-	stopper:=true
-	for stopper {
-		if response.Status!="READY" && response.Status!="ERROR"{
-			checkState := VerifyDomainTimer(response.Host,false)
-			fmt.Println("Scanning...")
-			*response=checkState
-			time.Sleep(15 * time.Second)
-			continue
+func TimeCheckerStatusProgress(response *SSLResponse) {
+	const (
+		checkInterval = 15 * time.Second
+		maxAttempts   = 20
+	)
+	
+	attempts := 0
+
+	for {
+		if response.Status == "READY" || response.Status == "ERROR" {
+			return
 		}
-		stopper=false
+		if attempts >= maxAttempts {
+			response.Status = "TIMEOUT"
+			response.StatusMessage = "Max retry attempts reached"
+			fmt.Println("Max attempts reached")
+			return
+		}
+
+		fmt.Println("Scanning...")
+		checkState := VerifyDomainTimer(response.Host, false)
+		*response = checkState
+
+		attempts++
+		time.Sleep(checkInterval)
 	}
 }
+
 
 
 func CountGrades(endpoints EndpointResponse) map[string]int {

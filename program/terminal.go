@@ -9,8 +9,8 @@ func menu(reader *bufio.Reader) AppState {
 	fmt.Println("\nOptions:")
 	fmt.Println("1) Scan another domain")
 	fmt.Println("2) Show results again")
-	fmt.Println("3) Exit")
-	fmt.Println("4) View domains verified")
+	fmt.Println("3) View domains verified")
+	fmt.Println("4) Exit")
 	fmt.Print("> ")
 
 	choice, _ := reader.ReadString('\n')
@@ -23,7 +23,6 @@ func menu(reader *bufio.Reader) AppState {
 		return StateResults
 	case "3":
 		return StateVerifiedDomains
-		
 	case "4","exit":
 		return StateExit
 		
@@ -45,21 +44,21 @@ func PrintResults(result SSLResponse){
 		RegisterVulns(endpoints.Details,&vulns)
 	}
 	var globalScore = GlobalScore(
-						ScoreVulns(vulns),
+						ScoreVulns(vulns,result.Status),
 						ScoreGrade(CountGrades(result.Endpoints)),
-						ScoreProtocols(result.Endpoints),
+						ScoreProtocols(result.Endpoints,result.Status),
 						CountGrades(result.Endpoints),vulns) 
 	fmt.Println("Host:", result.Host)
 	fmt.Println("State:", result.Status)
 	if result.Status=="ERROR"{
 		fmt.Println("Error reason:", result.StatusMessage)
 	}
-	ScoreProtocols(result.Endpoints)
+	ScoreProtocols(result.Endpoints,result.Status)
 	fmt.Println("Vulns Detected:",vulns)
-	fmt.Println("Protocols Grade:",CountGrades(result.Endpoints))
+	fmt.Println("Endpoints Grade:",CountGrades(result.Endpoints))
 	fmt.Println("Grades Score:", ScoreGrade(CountGrades(result.Endpoints)))
-	fmt.Println("Protocols Score:",ScoreProtocols(result.Endpoints))
-	fmt.Println("Vulns Score:",ScoreVulns(vulns))
+	fmt.Println("Protocols Score:",ScoreProtocols(result.Endpoints,result.Status))
+	fmt.Println("Vulns Score:",ScoreVulns(vulns,result.Status))
 	fmt.Println("Domain Score:",globalScore)
-	fmt.Println("Domain Clasification",ClasificationFinal(globalScore))
+	fmt.Println("Domain Clasification",ClasificationFinal(globalScore,result.Status))
 }

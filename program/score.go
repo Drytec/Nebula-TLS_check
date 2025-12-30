@@ -1,8 +1,5 @@
 package main
 
-
-
-
 func ScoreGrade( grades map[string]int)int {
 	countGrades:=0
 	totalScore :=0
@@ -26,7 +23,7 @@ func ScoreGrade( grades map[string]int)int {
 	return totalScore
 }
 
-func ScoreProtocols(endpoints EndpointResponse) int {
+func ScoreProtocols(endpoints EndpointResponse,state string) int {
 	score := 100
 
 	for _, ep := range endpoints {
@@ -46,12 +43,18 @@ func ScoreProtocols(endpoints EndpointResponse) int {
 	if score < 0 {
 		score = 0
 	}
+	if state=="TIMEOUT"{
+		score=0
+	}
 
 	return score
 }
-func ScoreVulns(vulnsDetected []string)int{
+func ScoreVulns(vulnsDetected []string,state string)int{
 	totalScore:=100
 	if len(vulnsDetected)>0{
+		totalScore=0
+	}
+	if state=="TIMEOUT"{
 		totalScore=0
 	}
 	return totalScore
@@ -65,7 +68,10 @@ func GlobalScore(scoreVulns,scoreGrade,scoreProtocols int,grades map[string]int,
 	return totalScore
 }
 
-func ClasificationFinal(scoreTotal int) string {
+func ClasificationFinal(scoreTotal int,status string)string{
+	if status == "TIMEOUT" {
+		return "UNKNOWN"
+	}
 	switch {
 	case scoreTotal == 100:
 		return "SECURE"
