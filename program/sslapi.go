@@ -9,7 +9,7 @@ import (
 )
 
 func VerifyInsecureProtocols(protocols Protocols) bool {
-	insecureProtocols := []string{"1.0", "1.1","SSL","SSLv2","SSLv3"}
+	insecureProtocols := []string{"1.0", "1.1","SSL"}
 	for _, val := range insecureProtocols  {
 		for _,protocol:=range protocols{
 			if protocol.Name == val || protocol.Version == val {
@@ -45,12 +45,12 @@ func RegisterVulns(details  EndpointDetails,vulsList *[]string){
 }
 
 
-func TimeCheckerStatusProgress(response *SSLResponse,statusCode int){
+func TimeCheckerStatusProgress(response *SSLResponse){
 	stopper:=true
 	for stopper {
 		if response.Status!="READY" && response.Status!="ERROR"{
-			checkState := VerifyDomain(response.Host,false)
-			fmt.Println("EJECUTANDO")
+			checkState := VerifyDomainTimer(response.Host,false)
+			fmt.Println("Scanning...")
 			*response=checkState
 			time.Sleep(15 * time.Second)
 			continue
@@ -58,6 +58,7 @@ func TimeCheckerStatusProgress(response *SSLResponse,statusCode int){
 		stopper=false
 	}
 }
+
 
 func CountGrades(endpoints EndpointResponse) map[string]int {
 	grades := make(map[string]int)
@@ -108,29 +109,58 @@ func VerifyDomain(domain string,startNew bool) SSLResponse {
 	if startNew{
 		resp, err = http.Get("https://api.ssllabs.com/api/v2/analyze?host=" + domain + "&all=on&startNew")
 	}
-	code :=resp.StatusCode
 	if err != nil {
-		fmt.Println("Error en la petición:", err)
+		fmt.Println("ERROR:", err)
 		return SSLResponse{}
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("Error leyendo respuesta:", err)
+		fmt.Println("ERROR:", err)
 		return SSLResponse{}
 	}
 
 	var result SSLResponse
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		fmt.Println("Error parseando JSON:", err)
+		fmt.Println("ERROR:", err)
 		return SSLResponse{}
 	}
-	TimeCheckerStatusProgress(&result,code)
+	TimeCheckerStatusProgress(&result,)
 	return result
 }
 
+func VerifyDomainTimer(domain string,startNew bool) SSLResponse {
+
+	var resp *http.Response
+	var err error
+
+	resp, err = http.Get("https://api.ssllabs.com/api/v2/analyze?host=" + domain + "&all=on")
+
+	if startNew{
+		resp, err = http.Get("https://api.ssllabs.com/api/v2/analyze?host=" + domain + "&all=on&startNew")
+	}
+	if err != nil {
+		fmt.Println("ERROR:", err)
+		return SSLResponse{}
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("ERROR:", err)
+		return SSLResponse{}
+	}
+
+	var result SSLResponse
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		fmt.Println("ERROR:", err)
+		return SSLResponse{}
+	}
+	return result
+}
 
 func GetInfo() (*InfoResponse, error) {
 	resp, err := http.Get("https://api.ssllabs.com/api/v2/info")
