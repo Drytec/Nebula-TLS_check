@@ -299,7 +299,6 @@ SSL Labs API has rate limits to prevent abuse:
 
 **Solution:**
 - Avoid rapid consecutive scans
-- Use `fromCache=true` parameter for recent results 
 ---
 
 #### **"Domain unreachable" or "ERROR" status**
