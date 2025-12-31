@@ -31,26 +31,17 @@ type EndpointResponse []struct {
 type EndpointDetails struct {
 
 	Protocols Protocols `json:"protocols"`
-	//Suites    Suites   `json:"suites"`
 
-	// Vulnerabilidades críticas
 	VulnBeast  bool `json:"vulnBeast"`
 	Heartbleed bool `json:"heartbleed"`
 	Poodle     bool `json:"poodle"`
 	Freak      bool `json:"freak"`
 	Logjam     bool `json:"logjam"`
 
-	// TLS features
-	ForwardSecrecy int  `json:"forwardSecrecy"`
+	
 	SupportsRc4    bool `json:"supportsRc4"`
 	Rc4Only        bool `json:"rc4Only"`
 
-	
-	RenegSupport int `json:"renegSupport"`
-
-	
-	OcspStapling bool `json:"ocspStapling"`
-	HasSct       int  `json:"hasSct"`
 }
 
 

@@ -15,7 +15,7 @@ func ScoreGrade( grades map[string]int)int {
 	"B":  80,
 	"C":  65,
 	"D":  50,
-	"E":  30,
+	"E":  0,
 	}	
 	for key,value :=range weights{
 		totalScore = totalScore +(value*grades[key])/countGrades
@@ -25,7 +25,7 @@ func ScoreGrade( grades map[string]int)int {
 
 func ScoreProtocols(endpoints EndpointResponse,state string) int {
 	score := 100
-
+	
 	for _, ep := range endpoints {
 		for _, p := range ep.Details.Protocols {
 			if p.Name == "SSL" && p.Version == "2.0" {
@@ -78,11 +78,11 @@ func ClasificationFinal(scoreTotal int,status string)string{
 		return "UNKNOWN"
 	}
 	switch {
-	case scoreTotal == 100:
+	case scoreTotal >=90:
 		return "SECURE"
 	case scoreTotal >= 75:
-		return "STRONG"
-	case scoreTotal >= 50:
+		return "ACCEPTABLE"
+	case scoreTotal >= 60:
 		return "WEAK"
 	default:
 		return "INSECURE"
