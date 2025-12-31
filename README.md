@@ -5,6 +5,8 @@ It allows you to analyze domains, detect SSL/TLS vulnerabilities, calculate secu
 
 The application is fully Dockerized and can be executed on any platform without installing Go or additional dependencies.
 
+Based on V2 of https://github.com/ssllabs/ssllabs-scan.git
+
 ---
 
 ## 🔐 Features
@@ -336,16 +338,6 @@ expired.badssl.com
 
 ---
 
-## 🤝 Contributing
-
-Contributions are welcome! Here's how you can help:
-
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/improvement`)
-3. **Commit** your changes (`git commit -am 'Add new feature'`)
-4. **Push** to the branch (`git push origin feature/improvement`)
-5. **Open** a Pull Request
-
 ### Development Guidelines
 - Follow Go best practices and conventions
 - Add comments for complex logic
@@ -382,21 +374,6 @@ This tool is for **educational and authorized security assessment purposes only*
 - Respect SSL Labs' [Terms of Service](https://www.ssllabs.com/about/terms.html)
 - Do not use for malicious purposes or unauthorized penetration testing
 - The authors are not responsible for misuse of this tool
-
----
-
-## 📧 Support
-
-If you encounter issues:
-
-1. Check the [Troubleshooting](#-troubleshooting) section
-2. Search [existing issues](https://github.com/Drytec/Nebula-TLS_check/issues)
-3. Open a [new issue](https://github.com/Drytec/Nebula-TLS_check/issues/new) with:
-   - Your operating system
-   - Go version (if applicable)
-   - Docker version (if applicable)
-   - Complete error message
-   - Steps to reproduce
 
 ---
 
