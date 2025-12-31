@@ -51,8 +51,13 @@ func ScoreProtocols(endpoints EndpointResponse,state string) int {
 }
 func ScoreVulns(vulnsDetected []string,state string)int{
 	totalScore:=100
-	if len(vulnsDetected)>0{
-		totalScore=0
+	for _,value := range vulnsDetected{
+		switch value{
+			case "BEAST":
+				totalScore=totalScore-25
+			default:
+				totalScore=0
+		}
 	}
 	if state=="TIMEOUT"{
 		totalScore=0

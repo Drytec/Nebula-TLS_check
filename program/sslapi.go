@@ -73,7 +73,44 @@ func TimeCheckerStatusProgress(response *SSLResponse) {
 	}
 }
 
+func CountProtocols(endpoints EndpointResponse) map[string]int {
+	protocols := map[string]int{
+		"TLS:1.0-1.1": 0,
+		"TLS:1.2":     0,
+		"TLS:1.3":     0,
+		"SSL:2.0":     0,
+		"SSL:3.0":     0,
+	}
 
+	for _, endpoint := range endpoints {
+		for _, protocol := range endpoint.Details.Protocols {
+
+			switch protocol.Name {
+
+			case "TLS":
+				switch protocol.Version {
+				case "1.0", "1.1":
+					protocols["TLS:1.0-1.1"]++
+					
+				case "1.2":
+					protocols["TLS:1.2"]++
+				case "1.3":
+					protocols["TLS:1.3"]++
+				}
+
+			case "SSL":
+				switch protocol.Version {
+				case "2.0":
+					protocols["SSL:2"]++
+				case "3.0":
+					protocols["SSL:3"]++
+				}
+			}
+		}
+	}
+
+	return protocols
+}
 
 func CountGrades(endpoints EndpointResponse) map[string]int {
 	grades := make(map[string]int)
@@ -153,9 +190,6 @@ func VerifyDomainTimer(domain string,startNew bool) SSLResponse {
 
 	resp, err = http.Get("https://api.ssllabs.com/api/v2/analyze?host=" + domain + "&all=on")
 
-	if startNew{
-		resp, err = http.Get("https://api.ssllabs.com/api/v2/analyze?host=" + domain + "&all=on&startNew")
-	}
 	if err != nil {
 		fmt.Println("ERROR:", err)
 		return SSLResponse{}
