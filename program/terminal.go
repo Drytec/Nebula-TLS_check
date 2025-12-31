@@ -58,7 +58,7 @@ func PrintResults(result SSLResponse){
 	fmt.Println("Vulns Score:",ScoreVulns(vulns,result.Status))
 	fmt.Println("Endpoints Grade:",CountGrades(result.Endpoints))
 	fmt.Println("Grades Score:", ScoreGrade(CountGrades(result.Endpoints)))
-	fmt.Println("Protocols Supported",CountProtocols(result.Endpoints))
+	fmt.Println("Protocols Supported:",CountProtocols(result.Endpoints))
 	fmt.Println("Protocols Score:",ScoreProtocols(result.Endpoints,result.Status))
 	fmt.Println("Domain Score:",globalScore)
 	fmt.Println("Domain Clasification",ClasificationFinal(globalScore,result.Status))

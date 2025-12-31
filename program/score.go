@@ -43,7 +43,7 @@ func ScoreProtocols(endpoints EndpointResponse,state string) int {
 	if score < 0 {
 		score = 0
 	}
-	if state=="TIMEOUT"{
+	if state=="TIMEOUT"|| state=="ERROR"{
 		score=0
 	}
 
@@ -59,7 +59,7 @@ func ScoreVulns(vulnsDetected []string,state string)int{
 				totalScore=0
 		}
 	}
-	if state=="TIMEOUT"{
+	if state=="TIMEOUT"|| state=="ERROR"{
 		totalScore=0
 	}
 	return totalScore
@@ -74,7 +74,7 @@ func GlobalScore(scoreVulns,scoreGrade,scoreProtocols int,grades map[string]int,
 }
 
 func ClasificationFinal(scoreTotal int,status string)string{
-	if status == "TIMEOUT" {
+	if status == "TIMEOUT" || status=="ERROR" {
 		return "UNKNOWN"
 	}
 	switch {

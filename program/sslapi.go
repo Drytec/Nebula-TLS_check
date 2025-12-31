@@ -6,7 +6,14 @@ import (
 	"io"
 	"net/http"
 	"time"
+	"regexp"
 )
+
+
+func isValidDomain(domain string) bool {
+	re := regexp.MustCompile(`^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$`)
+	return re.MatchString(domain)
+}
 
 func VerifyInsecureProtocols(protocols Protocols) bool {
 	insecureProtocols := []string{"1.0", "1.1","SSL"}
@@ -47,13 +54,23 @@ func RegisterVulns(details  EndpointDetails,vulsList *[]string){
 
 func TimeCheckerStatusProgress(response *SSLResponse) {
 	const (
-		checkInterval = 15 * time.Second
 		maxAttempts   = 20
 	)
+	var checkInterval = time.Second
 	
 	attempts := 0
 
 	for {
+		switch {
+		case attempts >=15:
+			checkInterval = 20 * time.Second
+		case attempts >= 10:
+			checkInterval = 15 * time.Second
+		case attempts >= 5:
+			checkInterval = 10 * time.Second
+		default:
+			checkInterval = 5 * time.Second
+		}
 		if response.Status == "READY" || response.Status == "ERROR" {
 			return
 		}
@@ -74,36 +91,28 @@ func TimeCheckerStatusProgress(response *SSLResponse) {
 }
 
 func CountProtocols(endpoints EndpointResponse) map[string]int {
-	protocols := map[string]int{
-		"TLS:1.0-1.1": 0,
-		"TLS:1.2":     0,
-		"TLS:1.3":     0,
-		"SSL:2.0":     0,
-		"SSL:3.0":     0,
+
+	normalization := map[string]map[string]string{
+		"TLS": {
+			"1.0": "TLS:1.0-1.1",
+			"1.1": "TLS:1.0-1.1",
+			"1.2": "TLS:1.2",
+			"1.3": "TLS:1.3",
+		},
+		"SSL": {
+			"2.0": "SSL:2.0",
+			"3.0": "SSL:3.0",
+		},
 	}
+
+	protocols := make(map[string]int)
 
 	for _, endpoint := range endpoints {
 		for _, protocol := range endpoint.Details.Protocols {
 
-			switch protocol.Name {
-
-			case "TLS":
-				switch protocol.Version {
-				case "1.0", "1.1":
-					protocols["TLS:1.0-1.1"]++
-					
-				case "1.2":
-					protocols["TLS:1.2"]++
-				case "1.3":
-					protocols["TLS:1.3"]++
-				}
-
-			case "SSL":
-				switch protocol.Version {
-				case "2.0":
-					protocols["SSL:2"]++
-				case "3.0":
-					protocols["SSL:3"]++
+			if versions, ok := normalization[protocol.Name]; ok {
+				if key, ok := versions[protocol.Version]; ok {
+					protocols[key]++
 				}
 			}
 		}
@@ -111,6 +120,7 @@ func CountProtocols(endpoints EndpointResponse) map[string]int {
 
 	return protocols
 }
+
 
 func CountGrades(endpoints EndpointResponse) map[string]int {
 	grades := make(map[string]int)
@@ -155,32 +165,34 @@ func VerifyDomain(domain string,startNew bool) SSLResponse {
 
 	var resp *http.Response
 	var err error
+	if isValidDomain(domain){
+		resp, err = http.Get("https://api.ssllabs.com/api/v2/analyze?host=" + domain + "&all=on")
 
-	resp, err = http.Get("https://api.ssllabs.com/api/v2/analyze?host=" + domain + "&all=on")
+		if startNew{
+			resp, err = http.Get("https://api.ssllabs.com/api/v2/analyze?host=" + domain + "&all=on&startNew")
+		}
+		if err != nil {
+			fmt.Println("ERROR:", err)
 
-	if startNew{
-		resp, err = http.Get("https://api.ssllabs.com/api/v2/analyze?host=" + domain + "&all=on&startNew")
-	}
-	if err != nil {
-		fmt.Println("ERROR:", err)
-		return SSLResponse{}
-	}
-	defer resp.Body.Close()
+			return SSLResponse{}
+		}
+		defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("ERROR:", err)
-		return SSLResponse{}
-	}
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("ERROR:", err)
+			return SSLResponse{}
+		}
 
-	var result SSLResponse
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		fmt.Println("ERROR:", err)
-		return SSLResponse{}
+		var result SSLResponse
+		err = json.Unmarshal(body, &result)
+		if err != nil {
+			return SSLResponse{Host:"INVALID",Status:"ERROR" ,StatusMessage: err.Error()}
+		}
+		TimeCheckerStatusProgress(&result,)
+		return result
 	}
-	TimeCheckerStatusProgress(&result,)
-	return result
+ 	return SSLResponse{Host:"INVALID",Status:"ERROR" ,StatusMessage:"Invalid Domain"}
 }
 
 func VerifyDomainTimer(domain string,startNew bool) SSLResponse {
