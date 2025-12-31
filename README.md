@@ -207,9 +207,10 @@ Based on SSL Labs letter grades for all endpoints:
 Evaluates supported TLS/SSL protocols:
 - **TLS 1.3** - Highest security (100 points)
 - **TLS 1.2** - Good security (100 points)
-- **TLS 1.1** - Deprecated (50 points)
-- **TLS 1.0** - IDeprecated (50 points)
-- **SSL 3.0 or lower** - Critical vulnerability (0 points)
+- **TLS 1.1** - Deprecated (-20 points)
+- **TLS 1.0** - Deprecated (-20 points)
+- **SSL 3.0** - Critical vulnerability (-40 points)
+- **SSL 2.0** - Extreme vulnerability (-100 points)
 
 ### Final Classification
 
@@ -292,14 +293,11 @@ go run .
 #### **"Rate limit exceeded" from SSL Labs API**
 
 SSL Labs API has rate limits to prevent abuse:
-- **Maximum:** 1 assessment per domain every 2 minutes
 - **Overall:** Limited number of concurrent assessments
 
 **Solution:**
-- Wait 2-3 minutes before re-scanning the same domain
 - Avoid rapid consecutive scans
-- Use `fromCache=true` parameter for recent results (already implemented)
-
+- Use `fromCache=true` parameter for recent results 
 ---
 
 #### **"Domain unreachable" or "ERROR" status**

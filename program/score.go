@@ -14,7 +14,7 @@ func ScoreGrade( grades map[string]int)int {
 	"A":  90,
 	"B":  80,
 	"C":  65,
-	"D":  50,
+	"D":  40,
 	"E":  0,
 	}	
 	for key,value :=range weights{
@@ -62,7 +62,7 @@ func ScoreVulns(vulnsDetected []string,state string)int{
 	if state=="TIMEOUT"|| state=="ERROR"{
 		totalScore=0
 	}
-	
+
 	return totalScore
 }
 

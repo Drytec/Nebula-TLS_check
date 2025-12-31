@@ -95,8 +95,8 @@ func CountProtocols(endpoints EndpointResponse) map[string]int {
 
 	normalization := map[string]map[string]string{
 		"TLS": {
-			"1.0": "TLS:1.0-1.1",
-			"1.1": "TLS:1.0-1.1",
+			"1.0": "TLS:1.0",
+			"1.1": "TLS:1.1",
 			"1.2": "TLS:1.2",
 			"1.3": "TLS:1.3",
 		},

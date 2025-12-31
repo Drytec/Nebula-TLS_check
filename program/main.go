@@ -40,7 +40,7 @@ func main() {
 		}
 	}
 
-	fmt.Println("Bye")
+	fmt.Println(">")
 }
 
 	
