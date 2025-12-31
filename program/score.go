@@ -62,6 +62,7 @@ func ScoreVulns(vulnsDetected []string,state string)int{
 	if state=="TIMEOUT"|| state=="ERROR"{
 		totalScore=0
 	}
+	
 	return totalScore
 }
 

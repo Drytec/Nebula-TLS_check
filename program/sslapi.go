@@ -10,6 +10,7 @@ import (
 )
 
 
+
 func isValidDomain(domain string) bool {
 	re := regexp.MustCompile(`^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$`)
 	return re.MatchString(domain)

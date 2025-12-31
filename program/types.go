@@ -12,7 +12,6 @@ const (
 )
 
 
-
 type SSLResponse struct {
 	Status        string           `json:"status"`
 	StatusMessage string           `json:"statusMessage"`

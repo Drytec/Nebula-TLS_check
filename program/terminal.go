@@ -39,6 +39,7 @@ func PrintDomains(domains []string){
 func PrintResults(result SSLResponse){	
 	var vulns []string
 
+	
 	for _,endpoints:= range result.Endpoints{
 		RegisterVulns(endpoints.Details,&vulns)
 	}
